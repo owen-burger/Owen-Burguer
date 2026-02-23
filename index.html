@@ -115,6 +115,7 @@ Para evitar pérdida y/o engaños ¡Esperamos tu pago!
 
 <script>
 
+// 🔥 PRODUCTOS BASE
 const categories={
 Hamburguesas:[
 {name:"Clásica",price:5,desc:"Carne, lechuga, tomate y queso",img:"https://images.unsplash.com/photo-1568901346375-23c9450c58cd"},
@@ -126,6 +127,16 @@ Perros:[
 Bebidas:[
 {name:"Coca Cola",price:1.5,desc:"Refresco frío",img:"https://images.unsplash.com/photo-1580910051074-3eb694886505"}
 ]};
+
+// 🔥 NUEVA FUNCIÓN: CARGAR PRODUCTOS DESDE ADMIN
+const adminProducts = JSON.parse(localStorage.getItem("adminProducts")) || {};
+
+for(let cat in adminProducts){
+if(!categories[cat]){
+categories[cat]=[];
+}
+categories[cat]=categories[cat].concat(adminProducts[cat]);
+}
 
 let cart=JSON.parse(localStorage.getItem("cart"))||{};
 let currentCategory="Hamburguesas";
