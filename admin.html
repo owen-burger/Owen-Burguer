@@ -4,125 +4,47 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Admin - Owen Burguer</title>
-
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap" rel="stylesheet">
-
 <style>
-:root{
---bg:#f2f2f2;
---card:#ffffff;
---text:#111;
---primary:#ff7a00;
---danger:#e53935;
---shadow:0 6px 18px rgba(0,0,0,0.08);
-}
-body{margin:0;font-family:Poppins,sans-serif;background:var(--bg);}
-header{background:linear-gradient(135deg,#111,#333);color:#fff;padding:20px;text-align:center;font-size:20px;font-weight:700;}
+body{margin:0;font-family:Poppins,sans-serif;background:#f2f2f2;}
+header{background:#111;color:#fff;padding:20px;text-align:center;}
 .products{padding:15px;padding-bottom:100px;display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:15px;}
-.card{background:var(--card);border-radius:15px;box-shadow:var(--shadow);overflow:hidden;position:relative;}
+.card{background:#fff;border-radius:15px;box-shadow:0 6px 18px rgba(0,0,0,0.08);overflow:hidden;position:relative;}
 .card img{width:100%;height:120px;object-fit:cover;}
 .card h4{margin:10px;font-size:14px;}
-.price{margin:0 10px 10px;font-weight:700;color:var(--primary);}
-.delete-btn{
-position:absolute;
-top:8px;
-right:8px;
-background:var(--danger);
-border:none;
-color:#fff;
-border-radius:50%;
-width:25px;
-height:25px;
-cursor:pointer;
-font-weight:bold;
-}
-.add-btn{
-position:fixed;
-bottom:80px;
-right:20px;
-background:var(--primary);
-color:#fff;
-border:none;
-border-radius:50%;
-width:60px;
-height:60px;
-font-size:30px;
-cursor:pointer;
-box-shadow:0 5px 15px rgba(0,0,0,0.2);
-}
-.bottom-nav{
-position:fixed;
-bottom:0;
-width:100%;
-background:#fff;
-display:flex;
-justify-content:space-around;
-padding:10px 0;
-box-shadow:0 -3px 10px rgba(0,0,0,0.1);
-}
+.price{margin:0 10px 10px;font-weight:700;color:#ff7a00;}
+.delete-btn{position:absolute;top:8px;right:8px;background:#e53935;color:#fff;border:none;border-radius:50%;width:25px;height:25px;cursor:pointer;}
+.add-btn{position:fixed;bottom:80px;right:20px;background:#ff7a00;color:#fff;border:none;border-radius:50%;width:60px;height:60px;font-size:30px;cursor:pointer;}
+.bottom-nav{position:fixed;bottom:0;width:100%;background:#fff;display:flex;justify-content:space-around;padding:10px 0;}
 .nav-item{text-align:center;font-size:12px;cursor:pointer;}
-.nav-item.active{color:var(--primary);font-weight:700;}
-.modal{
-position:fixed;
-top:0;
-left:0;
-width:100%;
-height:100%;
-background:rgba(0,0,0,0.6);
-display:none;
-align-items:center;
-justify-content:center;
-}
-.modal-content{
-background:#fff;
-width:90%;
-max-width:400px;
-border-radius:20px;
-padding:20px;
-text-align:center;
-}
-input{
-width:90%;
-padding:10px;
-margin:8px 0;
-border-radius:8px;
-border:1px solid #ccc;
-}
-button{
-background:var(--primary);
-border:none;
-padding:10px 15px;
-border-radius:8px;
-color:#fff;
-font-weight:600;
-cursor:pointer;
-margin:5px;
-}
-.btn-danger{background:var(--danger);}
+.nav-item.active{color:#ff7a00;font-weight:700;}
+.modal{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);display:none;align-items:center;justify-content:center;}
+.modal-content{background:#fff;width:90%;max-width:400px;border-radius:20px;padding:20px;text-align:center;}
+input{width:90%;padding:10px;margin:8px 0;border-radius:8px;border:1px solid #ccc;}
+button{background:#ff7a00;border:none;padding:10px 15px;border-radius:8px;color:#fff;font-weight:600;cursor:pointer;margin:5px;}
 </style>
 </head>
 <body>
 
 <header>
-⚙️ Panel Admin  
+⚙️ Panel Admin
 <br>
-<button onclick="goHome()" style="margin-top:10px;">Ir al Inicio</button>
+<button onclick="location.href='index.html'">Ir al Inicio</button>
 </header>
 
 <div id="adminMenu" class="products"></div>
+<button class="add-btn" onclick="openModal()">+</button>
 
-<button class="add-btn" onclick="openAddModal()">+</button>
-
-<div class="modal" id="addModal">
+<div class="modal" id="modal">
 <div class="modal-content">
 <h3>Nuevo Producto</h3>
-<input type="text" id="newName" placeholder="Nombre">
-<input type="number" id="newPrice" placeholder="Precio">
-<input type="text" id="newDesc" placeholder="Descripción">
-<input type="text" id="newImg" placeholder="URL Imagen">
+<input type="text" id="name" placeholder="Nombre">
+<input type="number" id="price" placeholder="Precio">
+<input type="text" id="desc" placeholder="Descripción">
+<input type="text" id="img" placeholder="URL Imagen">
 <br>
-<button onclick="addProduct()">Guardar</button>
-<button class="btn-danger" onclick="closeAddModal()">Cancelar</button>
+<button onclick="saveProduct()">Guardar</button>
+<button onclick="closeModal()">Cancelar</button>
 </div>
 </div>
 
@@ -134,79 +56,71 @@ margin:5px;
 
 <script>
 
-/* 🔥 AHORA USAMOS LA MISMA CLAVE QUE EL INDEX */
+let currentCategory="Hamburguesas";
 
-let categories = JSON.parse(localStorage.getItem("adminProducts")) || {
+function getData(){
+return JSON.parse(localStorage.getItem("adminProducts")) || {
 Hamburguesas:[],
 Perros:[],
 Bebidas:[]
 };
-
-let currentCategory="Hamburguesas";
-
-function saveCategories(){
-localStorage.setItem("adminProducts",JSON.stringify(categories));
 }
 
-function renderAdmin(){
+function saveData(data){
+localStorage.setItem("adminProducts",JSON.stringify(data));
+}
+
+function render(){
+let data=getData();
 let container=document.getElementById("adminMenu");
 container.innerHTML="";
-categories[currentCategory].forEach((prod,index)=>{
+
+data[currentCategory].forEach((p,i)=>{
 let card=document.createElement("div");
 card.className="card";
 card.innerHTML=`
-<button class="delete-btn" onclick="deleteProduct(${index})">x</button>
-<img src="${prod.img}">
-<h4>${prod.name}</h4>
-<div class="price">$${prod.price}</div>
+<button class="delete-btn" onclick="deleteProduct(${i})">x</button>
+<img src="${p.img}">
+<h4>${p.name}</h4>
+<div class="price">$${p.price}</div>
 `;
 container.appendChild(card);
 });
 }
 
+function saveProduct(){
+let name=document.getElementById("name").value.trim();
+let price=parseFloat(document.getElementById("price").value);
+let desc=document.getElementById("desc").value.trim();
+let img=document.getElementById("img").value.trim();
+
+if(!name||!price||!desc||!img){alert("Completa todo");return;}
+
+let data=getData();
+data[currentCategory].push({name,price,desc,img});
+saveData(data);
+closeModal();
+render();
+}
+
+function deleteProduct(i){
+let data=getData();
+data[currentCategory].splice(i,1);
+saveData(data);
+render();
+}
+
 function changeCategory(cat,el){
 currentCategory=cat;
-document.querySelectorAll(".nav-item").forEach(i=>i.classList.remove("active"));
+document.querySelectorAll(".nav-item").forEach(n=>n.classList.remove("active"));
 el.classList.add("active");
-renderAdmin();
+render();
 }
 
-function openAddModal(){
-document.getElementById("addModal").style.display="flex";
-}
+function openModal(){document.getElementById("modal").style.display="flex";}
+function closeModal(){document.getElementById("modal").style.display="none";}
 
-function closeAddModal(){
-document.getElementById("addModal").style.display="none";
-}
-
-function addProduct(){
-let name=document.getElementById("newName").value.trim();
-let price=parseFloat(document.getElementById("newPrice").value);
-let desc=document.getElementById("newDesc").value.trim();
-let img=document.getElementById("newImg").value.trim();
-
-if(!name||!price||!desc||!img){
-alert("Completa todos los campos");
-return;
-}
-
-categories[currentCategory].push({name,price,desc,img});
-saveCategories();
-closeAddModal();
-renderAdmin();
-}
-
-function deleteProduct(index){
-categories[currentCategory].splice(index,1);
-saveCategories();
-renderAdmin();
-}
-
-function goHome(){
-window.location.href="index.html";
-}
-
-renderAdmin();
+render();
 
 </script>
 
