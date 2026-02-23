@@ -25,19 +25,22 @@ header{background:linear-gradient(135deg,#ff7a00,#ffb347);color:#fff;padding:20p
 .card img{width:100%;height:120px;object-fit:cover;}
 .card h4{margin:10px;font-size:14px;}
 .price{margin:0 10px 10px;font-weight:700;color:var(--primary);}
-button{background:var(--primary);border:none;padding:10px 15px;border-radius:8px;color:#fff;font-weight:600;cursor:pointer;margin:5px;transition:0.2s;}
-button:active{transform:scale(0.92);}
+button{background:var(--primary);border:none;padding:8px 12px;border-radius:8px;color:#fff;font-weight:600;cursor:pointer;margin:5px;}
 .btn-danger{background:var(--danger);}
 .bottom-nav{position:fixed;bottom:0;width:100%;background:var(--card);display:flex;justify-content:space-around;padding:10px 0;box-shadow:0 -3px 10px rgba(0,0,0,0.1);}
 .nav-item{text-align:center;font-size:12px;cursor:pointer;position:relative;}
 .nav-item.active{color:var(--primary);font-weight:700;}
 .badge{position:absolute;top:-5px;right:15px;background:red;color:#fff;font-size:10px;padding:2px 6px;border-radius:50px;display:none;}
 .modal{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);display:none;align-items:center;justify-content:center;z-index:999;}
-.modal-content{background:var(--card);width:90%;max-width:400px;border-radius:20px;padding:20px;text-align:center;}
+.modal-content{background:var(--card);width:90%;max-width:420px;border-radius:20px;padding:20px;text-align:center;max-height:90vh;overflow:auto;}
 .qty-controls{display:flex;justify-content:center;align-items:center;gap:15px;margin:15px 0;}
 .qty-number{font-size:18px;font-weight:700;}
-.cart-item{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;background:var(--card);padding:8px;border-radius:10px;}
+.cart-item{display:flex;gap:10px;margin-bottom:10px;background:var(--card);padding:8px;border-radius:10px;align-items:center;}
+.cart-item img{width:60px;height:60px;object-fit:cover;border-radius:8px;}
+.cart-info{flex:1;text-align:left;font-size:13px;}
 .total{font-weight:700;margin-top:10px;font-size:16px;}
+input{width:100%;padding:8px;margin:5px 0;border-radius:8px;border:1px solid #ccc;}
+.hidden{display:none;}
 </style>
 </head>
 
@@ -71,7 +74,18 @@ Owen Burguer
     <h3>Tu Pedido</h3>
     <div id="cartItems"></div>
     <div class="total" id="cartTotal"></div>
-    <button onclick="closeCart()">Cerrar</button>
+
+    <button onclick="toggleData()">Tus Datos</button>
+
+    <div id="dataSection" class="hidden">
+      <input type="text" id="nombre" placeholder="Nombre">
+      <input type="text" id="apellido" placeholder="Apellido">
+      <button onclick="getLocation()">Obtener Ubicación</button>
+      <p id="locationStatus" style="font-size:12px;"></p>
+    </div>
+
+    <button onclick="sendOrder()">Enviar Pedido</button>
+    <button class="btn-danger" onclick="closeCart()">Cerrar</button>
   </div>
 </div>
 
@@ -100,7 +114,6 @@ Bebidas:[
 {name:"Coca Cola",price:1.5,desc:"Refresco frío",img:"https://images.unsplash.com/photo-1580910051074-3eb694886505"}
 ]};
 
-/* CARGA SEGURA ADMIN */
 function loadAdminProducts(){
 let stored = localStorage.getItem("adminProducts");
 if(!stored) return;
@@ -118,11 +131,11 @@ categories[cat].push(prod);
 }
 loadAdminProducts();
 
-/* VARIABLES */
 let cart=JSON.parse(localStorage.getItem("cart"))||{};
 let currentCategory="Hamburguesas";
 let selectedProduct=null;
 let modalQty=1;
+let userLocation=null;
 
 /* RENDER */
 function renderMenu(){
@@ -179,6 +192,10 @@ closeModal();
 
 /* CARRITO */
 function openCart(){
+if(Object.keys(cart).length===0){
+alert("El carrito está vacío.");
+return;
+}
 renderCart();
 document.getElementById("cartModal").style.display="flex";
 }
@@ -191,16 +208,32 @@ function renderCart(){
 let container=document.getElementById("cartItems");
 container.innerHTML="";
 let total=0;
+
 for(let key in cart){
 let item=cart[key];
-total+=item.price*item.qty;
+let subtotal=item.price*item.qty;
+total+=subtotal;
+
 container.innerHTML+=`
 <div class="cart-item">
-<span>${item.name} x${item.qty}</span>
-<span>$${(item.price*item.qty).toFixed(2)}</span>
+<img src="${item.img}">
+<div class="cart-info">
+<strong>${item.name}</strong><br>
+Precio: $${item.price}<br>
+Cantidad: ${item.qty}<br>
+Subtotal: $${subtotal.toFixed(2)}<br>
+<button class="btn-danger" onclick="removeItem('${key}')">Eliminar</button>
+</div>
 </div>`;
 }
+
 document.getElementById("cartTotal").innerText="Total: $"+total.toFixed(2);
+}
+
+function removeItem(key){
+delete cart[key];
+saveCart();
+renderCart();
 }
 
 function saveCart(){
@@ -217,6 +250,55 @@ badge.style.display=total>0?"inline-block":"none";
 }
 updateBadge();
 
+/* DATOS */
+function toggleData(){
+document.getElementById("dataSection").classList.toggle("hidden");
+}
+
+function getLocation(){
+if(!navigator.geolocation){
+alert("Tu navegador no soporta ubicación.");
+return;
+}
+navigator.geolocation.getCurrentPosition(
+pos=>{
+userLocation={
+lat:pos.coords.latitude,
+lng:pos.coords.longitude
+};
+document.getElementById("locationStatus").innerText="Ubicación obtenida correctamente.";
+},
+()=>{ alert("No se pudo obtener la ubicación."); }
+);
+}
+
+/* ENVIAR */
+function sendOrder(){
+if(Object.keys(cart).length===0){
+alert("El carrito está vacío.");
+return;
+}
+
+let nombre=document.getElementById("nombre").value.trim();
+let apellido=document.getElementById("apellido").value.trim();
+
+if(!nombre || !apellido){
+alert("Debes ingresar Nombre y Apellido.");
+return;
+}
+
+if(!userLocation){
+alert("Debes obtener la ubicación.");
+return;
+}
+
+alert("⚠️ Recuerda realizar el pago previo antes de enviar el comprobante.");
+
+cart={};
+saveCart();
+closeCart();
+}
+
 /* ADMIN SECRETO */
 let pressTimer;
 const secretAdmin=document.getElementById("secretAdmin");
@@ -228,4 +310,4 @@ secretAdmin.addEventListener("touchend",()=>clearTimeout(pressTimer));
 </script>
 
 </body>
-</html>
+  </html>
