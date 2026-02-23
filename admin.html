@@ -9,72 +9,85 @@
 
 <style>
 :root{
---bg:#f4f6f9;
+--bg:#f2f2f2;
 --card:#ffffff;
+--text:#111;
 --primary:#ff7a00;
 --danger:#e53935;
---text:#222;
---shadow:0 8px 20px rgba(0,0,0,0.08);
+--shadow:0 6px 18px rgba(0,0,0,0.08);
 }
-
-body{
-margin:0;
-font-family:Poppins,sans-serif;
-background:var(--bg);
-color:var(--text);
+body{margin:0;font-family:Poppins,sans-serif;background:var(--bg);}
+header{background:linear-gradient(135deg,#111,#333);color:#fff;padding:20px;text-align:center;font-size:20px;font-weight:700;}
+.products{padding:15px;padding-bottom:100px;display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:15px;}
+.card{background:var(--card);border-radius:15px;box-shadow:var(--shadow);overflow:hidden;position:relative;}
+.card img{width:100%;height:120px;object-fit:cover;}
+.card h4{margin:10px;font-size:14px;}
+.price{margin:0 10px 10px;font-weight:700;color:var(--primary);}
+.delete-btn{
+position:absolute;
+top:8px;
+right:8px;
+background:var(--danger);
+border:none;
+color:#fff;
+border-radius:50%;
+width:25px;
+height:25px;
+cursor:pointer;
+font-weight:bold;
 }
-
-/* BOTÓN INICIO */
-.home-btn{
+.add-btn{
 position:fixed;
-left:15px;
-bottom:20px;
+bottom:80px;
+right:20px;
 background:var(--primary);
 color:#fff;
-padding:10px 15px;
-border-radius:30px;
-font-weight:600;
+border:none;
+border-radius:50%;
+width:60px;
+height:60px;
+font-size:30px;
 cursor:pointer;
-box-shadow:var(--shadow);
-z-index:1000;
-transition:.2s;
-text-decoration:none;
-display:inline-block;
+box-shadow:0 5px 15px rgba(0,0,0,0.2);
 }
-.home-btn:active{
-transform:scale(.95);
-}
-
-/* LOGIN */
-.login-screen{
-height:100vh;
+.bottom-nav{
+position:fixed;
+bottom:0;
+width:100%;
+background:#fff;
 display:flex;
+justify-content:space-around;
+padding:10px 0;
+box-shadow:0 -3px 10px rgba(0,0,0,0.1);
+}
+.nav-item{text-align:center;font-size:12px;cursor:pointer;}
+.nav-item.active{color:var(--primary);font-weight:700;}
+.modal{
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+background:rgba(0,0,0,0.6);
+display:none;
 align-items:center;
 justify-content:center;
 }
-
-.login-box{
-background:var(--card);
-padding:40px;
-border-radius:20px;
-box-shadow:var(--shadow);
-text-align:center;
+.modal-content{
+background:#fff;
 width:90%;
-max-width:350px;
+max-width:400px;
+border-radius:20px;
+padding:20px;
+text-align:center;
 }
-
-.login-box h2{
-margin-bottom:20px;
-}
-
-input, select{
-width:100%;
+input{
+width:90%;
 padding:10px;
 margin:8px 0;
 border-radius:8px;
 border:1px solid #ccc;
 }
-
 button{
 background:var(--primary);
 border:none;
@@ -83,188 +96,116 @@ border-radius:8px;
 color:#fff;
 font-weight:600;
 cursor:pointer;
-transition:.2s;
+margin:5px;
 }
-
-button:active{transform:scale(.95);}
 .btn-danger{background:var(--danger);}
-
-/* DASHBOARD */
-.dashboard{
-display:none;
-padding:20px;
-}
-
-.header{
-display:flex;
-justify-content:space-between;
-align-items:center;
-margin-bottom:20px;
-}
-
-.card{
-background:var(--card);
-padding:20px;
-border-radius:20px;
-box-shadow:var(--shadow);
-margin-bottom:20px;
-}
-
-.product-item{
-display:flex;
-justify-content:space-between;
-align-items:center;
-padding:8px 0;
-border-bottom:1px solid #eee;
-}
-
-.product-item:last-child{
-border-bottom:none;
-}
 </style>
 </head>
-
 <body>
 
-<!-- BOTÓN INICIO (SIN JS, 100% FUNCIONAL) -->
-<a href="index.html" class="home-btn">🏠 Ir al Inicio</a>
+<header>
+⚙️ Panel Admin  
+<br>
+<button onclick="goHome()" style="margin-top:10px;">Ir al Inicio</button>
+</header>
 
-<!-- LOGIN -->
-<div class="login-screen" id="loginScreen">
-<div class="login-box">
-<h2>🔐 Admin Owen Burguer</h2>
-<input type="password" id="adminPass" placeholder="Ingrese contraseña">
-<button onclick="login()">Ingresar</button>
+<div id="adminMenu" class="products"></div>
+
+<button class="add-btn" onclick="openAddModal()">+</button>
+
+<!-- MODAL AGREGAR -->
+<div class="modal" id="addModal">
+<div class="modal-content">
+<h3>Nuevo Producto</h3>
+<input type="text" id="newName" placeholder="Nombre">
+<input type="number" id="newPrice" placeholder="Precio">
+<input type="text" id="newDesc" placeholder="Descripción">
+<input type="text" id="newImg" placeholder="URL Imagen">
+<br>
+<button onclick="addProduct()">Guardar</button>
+<button class="btn-danger" onclick="closeAddModal()">Cancelar</button>
 </div>
 </div>
 
-<!-- DASHBOARD -->
-<div class="dashboard" id="dashboard">
-
-<div class="header">
-<h2>Panel Administrador</h2>
-<button class="btn-danger" onclick="logout()">Cerrar sesión</button>
-</div>
-
-<div class="card">
-<h3>Agregar Producto</h3>
-
-<select id="categorySelect"></select>
-
-<input type="text" id="name" placeholder="Nombre del producto">
-<input type="number" id="price" placeholder="Precio USD">
-<input type="text" id="desc" placeholder="Descripción">
-<input type="text" id="img" placeholder="URL de imagen">
-
-<button onclick="addProduct()">Agregar</button>
-</div>
-
-<div class="card">
-<h3>Productos por Categoría</h3>
-
-<select id="categoryView" onchange="renderProducts()"></select>
-
-<div id="productList"></div>
-</div>
-
+<div class="bottom-nav">
+<div class="nav-item active" onclick="changeCategory('Hamburguesas',this)">🍔<br>Hamburguesas</div>
+<div class="nav-item" onclick="changeCategory('Perros',this)">🌭<br>Perros</div>
+<div class="nav-item" onclick="changeCategory('Bebidas',this)">🥤<br>Bebidas</div>
 </div>
 
 <script>
 
-/* -------- LOGIN -------- */
-
-function login(){
-let pass=document.getElementById("adminPass").value;
-if(pass==="adm2026#"){
-document.getElementById("loginScreen").style.display="none";
-document.getElementById("dashboard").style.display="block";
-initAdmin();
-}else{
-alert("Contraseña incorrecta");
-}
-}
-
-function logout(){
-location.reload();
-}
-
-/* -------- DATA -------- */
-
-const defaultCategories = {
+let categories = JSON.parse(localStorage.getItem("categories")) || {
 Hamburguesas:[],
 Perros:[],
 Bebidas:[]
 };
 
-let categories = JSON.parse(localStorage.getItem("categories")) || defaultCategories;
+let currentCategory="Hamburguesas";
 
-/* -------- INIT -------- */
-
-function initAdmin(){
-let select1=document.getElementById("categorySelect");
-let select2=document.getElementById("categoryView");
-
-select1.innerHTML="";
-select2.innerHTML="";
-
-for(let cat in categories){
-select1.innerHTML+=`<option value="${cat}">${cat}</option>`;
-select2.innerHTML+=`<option value="${cat}">${cat}</option>`;
-}
-
-renderProducts();
-}
-
-/* -------- ADD PRODUCT -------- */
-
-function addProduct(){
-let cat=document.getElementById("categorySelect").value;
-let name=document.getElementById("name").value;
-let price=parseFloat(document.getElementById("price").value);
-let desc=document.getElementById("desc").value;
-let img=document.getElementById("img").value;
-
-if(!name || !price || !desc || !img){
-alert("Complete todos los campos");
-return;
-}
-
-categories[cat].push({name,price,desc,img});
+function saveCategories(){
 localStorage.setItem("categories",JSON.stringify(categories));
-
-document.getElementById("name").value="";
-document.getElementById("price").value="";
-document.getElementById("desc").value="";
-document.getElementById("img").value="";
-
-renderProducts();
-alert("Producto agregado correctamente");
 }
 
-/* -------- RENDER PRODUCTS -------- */
-
-function renderProducts(){
-let cat=document.getElementById("categoryView").value;
-let list=document.getElementById("productList");
-list.innerHTML="";
-
-categories[cat].forEach((p,i)=>{
-list.innerHTML+=`
-<div class="product-item">
-<span>${p.name} - $${p.price}</span>
-<button class="btn-danger" onclick="deleteProduct('${cat}',${i})">Eliminar</button>
-</div>
+function renderAdmin(){
+let container=document.getElementById("adminMenu");
+container.innerHTML="";
+categories[currentCategory].forEach((prod,index)=>{
+let card=document.createElement("div");
+card.className="card";
+card.innerHTML=`
+<button class="delete-btn" onclick="deleteProduct(${index})">x</button>
+<img src="${prod.img}">
+<h4>${prod.name}</h4>
+<div class="price">$${prod.price}</div>
 `;
+container.appendChild(card);
 });
 }
 
-/* -------- DELETE -------- */
-
-function deleteProduct(cat,index){
-categories[cat].splice(index,1);
-localStorage.setItem("categories",JSON.stringify(categories));
-renderProducts();
+function changeCategory(cat,el){
+currentCategory=cat;
+document.querySelectorAll(".nav-item").forEach(i=>i.classList.remove("active"));
+el.classList.add("active");
+renderAdmin();
 }
+
+function openAddModal(){
+document.getElementById("addModal").style.display="flex";
+}
+
+function closeAddModal(){
+document.getElementById("addModal").style.display="none";
+}
+
+function addProduct(){
+let name=document.getElementById("newName").value.trim();
+let price=parseFloat(document.getElementById("newPrice").value);
+let desc=document.getElementById("newDesc").value.trim();
+let img=document.getElementById("newImg").value.trim();
+
+if(!name||!price||!desc||!img){
+alert("Completa todos los campos");
+return;
+}
+
+categories[currentCategory].push({name,price,desc,img});
+saveCategories();
+closeAddModal();
+renderAdmin();
+}
+
+function deleteProduct(index){
+categories[currentCategory].splice(index,1);
+saveCategories();
+renderAdmin();
+}
+
+function goHome(){
+window.location.href="index.html";
+}
+
+renderAdmin();
 
 </script>
 
