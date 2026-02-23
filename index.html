@@ -3,363 +3,274 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Vzla Cash</title>
+<title>Owen Burguer</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap" rel="stylesheet">
 
 <style>
 :root{
---bg:#0f172a;
---card:#1e293b;
---accent:#f59e0b;
---text:#fff;
+--bg:#f2f2f2;
+--card:#ffffff;
+--text:#111;
+--primary:#ff7a00;
+--danger:#e53935;
+--shadow:0 6px 18px rgba(0,0,0,0.08);
 }
-
-body{
-margin:0;
-font-family:Arial, sans-serif;
-background:var(--bg);
-color:var(--text);
-}
-
-header{
-background:var(--card);
-padding:15px;
-text-align:center;
-font-size:22px;
-font-weight:bold;
-}
-
-.grid{
-display:grid;
-grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
-gap:15px;
-padding:15px;
-}
-
-.card{
-background:var(--card);
-border-radius:15px;
-padding:10px;
-text-align:center;
-transition:0.2s;
-}
-
-.card:hover{
-transform:scale(1.05);
-}
-
-.card img{
-width:100%;
-height:120px;
-object-fit:cover;
-border-radius:10px;
-}
-
-button{
-background:var(--accent);
-border:none;
-padding:10px;
-margin-top:8px;
-border-radius:10px;
-cursor:pointer;
-font-weight:bold;
-}
-
-#cartBtn{
-position:fixed;
-bottom:20px;
-right:20px;
-background:var(--accent);
-padding:15px;
-border-radius:50%;
-font-size:20px;
-cursor:pointer;
-}
-
-.modal{
-position:fixed;
-inset:0;
-background:rgba(0,0,0,0.6);
-display:none;
-justify-content:center;
-align-items:center;
-}
-
-.modal-content{
-background:var(--card);
-padding:20px;
-border-radius:15px;
-width:90%;
-max-width:400px;
-max-height:90vh;
-overflow:auto;
-}
-
-.close{
-float:right;
-cursor:pointer;
-font-size:20px;
-}
-
-input{
-width:100%;
-padding:8px;
-margin:5px 0;
-border-radius:8px;
-border:none;
-}
-
-.cart-item{
-display:flex;
-align-items:center;
-justify-content:space-between;
-margin-bottom:10px;
-}
-
-.cart-item img{
-width:50px;
-height:50px;
-object-fit:cover;
-border-radius:8px;
-}
-
-.delete{
-background:red;
-color:white;
-border:none;
-border-radius:6px;
-padding:5px;
-cursor:pointer;
-}
+body{margin:0;font-family:Poppins,sans-serif;background:var(--bg);color:var(--text);}
+header{background:linear-gradient(135deg,#ff7a00,#ffb347);color:#fff;padding:20px;text-align:center;font-size:22px;font-weight:700;}
+.products{padding:15px;padding-bottom:110px;display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:15px;}
+.card{background:var(--card);border-radius:15px;box-shadow:var(--shadow);overflow:hidden;cursor:pointer;transition:.3s;}
+.card img{width:100%;height:120px;object-fit:cover;}
+.card h4{margin:10px;font-size:14px;}
+.price{margin:0 10px 10px;font-weight:700;color:var(--primary);}
+button{background:var(--primary);border:none;padding:8px 12px;border-radius:8px;color:#fff;font-weight:600;cursor:pointer;margin:5px;}
+.btn-danger{background:var(--danger);}
+.bottom-nav{position:fixed;bottom:0;width:100%;background:var(--card);display:flex;justify-content:space-around;padding:10px 0;box-shadow:0 -3px 10px rgba(0,0,0,0.1);}
+.nav-item{text-align:center;font-size:12px;cursor:pointer;position:relative;}
+.nav-item.active{color:var(--primary);font-weight:700;}
+.badge{position:absolute;top:-5px;right:15px;background:red;color:#fff;font-size:10px;padding:2px 6px;border-radius:50px;display:none;}
+.modal{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);display:none;align-items:center;justify-content:center;z-index:999;}
+.modal-content{background:var(--card);width:90%;max-width:420px;border-radius:20px;padding:20px;text-align:center;max-height:90vh;overflow:auto;}
+.qty-controls{display:flex;justify-content:center;align-items:center;gap:15px;margin:15px 0;}
+.qty-number{font-size:18px;font-weight:700;}
+.cart-item{display:flex;gap:10px;margin-bottom:10px;background:var(--card);padding:8px;border-radius:10px;align-items:center;}
+.cart-item img{width:60px;height:60px;object-fit:cover;border-radius:8px;}
+.cart-info{flex:1;text-align:left;font-size:13px;}
+.total{font-weight:700;margin-top:10px;font-size:16px;}
+input{width:100%;padding:8px;margin:5px 0;border-radius:8px;border:1px solid #ccc;}
+.hidden{display:none;}
 </style>
 </head>
 
 <body>
 
-<header>🍔 Vzla Cash</header>
+<header>
+<span id="secretAdmin">🍔</span>
+Owen Burguer
+</header>
 
-<div class="grid" id="products"></div>
+<div id="menu" class="products"></div>
 
-<div id="cartBtn">🛒</div>
+<!-- MODAL PRODUCTO -->
+<div class="modal" id="productModal">
+<div class="modal-content">
+<h3 id="modalTitle"></h3>
+<p id="modalDesc"></p>
+<div class="qty-controls">
+<button onclick="changeQty(-1)">-</button>
+<span class="qty-number" id="qtyNumber">1</span>
+<button onclick="changeQty(1)">+</button>
+</div>
+<button onclick="addToCart()">Agregar</button>
+<button class="btn-danger" onclick="closeModal()">Cancelar</button>
+</div>
+</div>
 
 <!-- MODAL CARRITO -->
 <div class="modal" id="cartModal">
 <div class="modal-content">
-<span class="close" onclick="closeModal('cartModal')">✖</span>
-<h3>Tu Carrito</h3>
+<h3>Tu Pedido</h3>
 <div id="cartItems"></div>
-<br>
-<button onclick="openDatos()">Tus Datos</button>
+<div class="total" id="cartTotal"></div>
+
+<button onclick="toggleData()">Tus Datos</button>
+
+<div id="dataSection" class="hidden">
+<input type="text" id="nombre" placeholder="Nombre">
+<input type="text" id="apellido" placeholder="Apellido">
+<button onclick="getLocation()">Obtener Ubicación</button>
+<p id="locationStatus" style="font-size:12px;"></p>
 </div>
-</div>
 
-<!-- MODAL DATOS -->
-<div class="modal" id="datosModal">
-<div class="modal-content">
-<span class="close" onclick="closeModal('datosModal')">✖</span>
-<h3>Tus Datos</h3>
-
-<input type="text" id="nombre" placeholder="Nombre" required>
-<input type="text" id="apellido" placeholder="Apellido" required>
-
-<button onclick="obtenerUbicacion()">Obtener Ubicación</button>
-<p id="ubicacionTexto" style="font-size:13px;"></p>
-
-<button onclick="validarEnvio()">Enviar Pedido</button>
+<button onclick="sendOrder()">Enviar Pedido</button>
+<button class="btn-danger" onclick="closeCart()">Cerrar</button>
 </div>
 </div>
 
 <!-- MODAL ALERTA -->
 <div class="modal" id="alertModal">
 <div class="modal-content">
-<h3 id="alertText"></h3>
-<div id="alertButtons"></div>
+<p id="alertMessage"></p>
+<div id="alertButtons">
+<button onclick="closeAlert()">Aceptar</button>
+</div>
+</div>
+</div>
+
+<!-- NAVBAR -->
+<div class="bottom-nav">
+<div class="nav-item active" onclick="showCategory('Hamburguesas',this)">🍔<br>Hamburguesas</div>
+<div class="nav-item" onclick="showCategory('Perros',this)">🌭<br>Perros</div>
+<div class="nav-item" onclick="showCategory('Bebidas',this)">🥤<br>Bebidas</div>
+<div class="nav-item" onclick="openCart()">🛒<br>Carrito
+<span id="cartBadge" class="badge"></span>
 </div>
 </div>
 
 <script>
 
-let productos = [
-{nombre:"Hamburguesa",precio:5,img:"https://i.imgur.com/8Km9tLL.jpg"},
-{nombre:"Pizza",precio:8,img:"https://i.imgur.com/6X4K3Jx.jpg"},
-{nombre:"Perro Caliente",precio:4,img:"https://i.imgur.com/Z8hKZgC.jpg"}
-];
+/* ALERTA */
+function showAlert(msg){
+document.getElementById("alertMessage").innerText=msg;
+document.getElementById("alertButtons").innerHTML='<button onclick="closeAlert()">Aceptar</button>';
+document.getElementById("alertModal").style.display="flex";
+}
+function closeAlert(){
+document.getElementById("alertModal").style.display="none";
+}
 
-let carrito = [];
-let ubicacionLink = "";
-let latitud = "";
-let longitud = "";
+/* PRODUCTOS */
+const categories={
+Hamburguesas:[
+{name:"Clásica",price:5,desc:"Carne, lechuga, tomate y queso",img:"https://images.unsplash.com/photo-1568901346375-23c9450c58cd"},
+{name:"Doble Carne",price:7,desc:"Doble carne y doble queso",img:"https://images.unsplash.com/photo-1550547660-d9450f859349"}
+],
+Perros:[
+{name:"Tradicional",price:4,desc:"Con papitas y salsa",img:"https://images.unsplash.com/photo-1612392062798-2a5f9f9c38af"}
+],
+Bebidas:[
+{name:"Coca Cola",price:1.5,desc:"Refresco frío",img:"https://images.unsplash.com/photo-1580910051074-3eb694886505"}
+]};
 
-function renderProductos(){
-const container = document.getElementById("products");
-container.innerHTML="";
-productos.forEach((p,i)=>{
-container.innerHTML+=`
-<div class="card">
-<img src="${p.img}">
-<h4>${p.nombre}</h4>
-<p>$${p.precio}</p>
-<button onclick="agregarCarrito(${i})">Agregar</button>
-</div>
-`;
+let cart=JSON.parse(localStorage.getItem("cart"))||{};
+let currentCategory="Hamburguesas";
+let selectedProduct=null;
+let modalQty=1;
+let userLocation=null;
+
+/* MENÚ */
+function renderMenu(){
+let menu=document.getElementById("menu");
+menu.innerHTML="";
+categories[currentCategory].forEach(prod=>{
+let card=document.createElement("div");
+card.className="card";
+card.innerHTML=`<img src="${prod.img}"><h4>${prod.name}</h4><div class="price">$${prod.price}</div>`;
+card.onclick=()=>openProduct(prod);
+menu.appendChild(card);
 });
 }
+renderMenu();
 
-function agregarCarrito(i){
-carrito.push(productos[i]);
-mostrarAlerta("Producto agregado al carrito");
+function showCategory(cat,el){
+currentCategory=cat;
+document.querySelectorAll(".nav-item").forEach(i=>i.classList.remove("active"));
+if(el)el.classList.add("active");
+renderMenu();
 }
 
-function renderCarrito(){
-const container = document.getElementById("cartItems");
-container.innerHTML="";
+/* PRODUCTO */
+function openProduct(prod){
+selectedProduct=prod;
+modalQty=1;
+document.getElementById("qtyNumber").innerText=1;
+document.getElementById("modalTitle").innerText=prod.name;
+document.getElementById("modalDesc").innerText=prod.desc;
+document.getElementById("productModal").style.display="flex";
+}
+function closeModal(){ document.getElementById("productModal").style.display="none"; }
+function changeQty(val){ modalQty=Math.max(1,modalQty+val); document.getElementById("qtyNumber").innerText=modalQty; }
+function addToCart(){
+let key=selectedProduct.name;
+if(cart[key]) cart[key].qty+=modalQty;
+else cart[key]={...selectedProduct,qty:modalQty};
+saveCart();
+closeModal();
+}
 
-carrito.forEach((p,i)=>{
+/* CARRITO */
+function openCart(){
+if(Object.keys(cart).length===0){ showAlert("El carrito está vacío."); return; }
+renderCart();
+document.getElementById("cartModal").style.display="flex";
+}
+function closeCart(){ document.getElementById("cartModal").style.display="none"; }
+
+function renderCart(){
+let container=document.getElementById("cartItems");
+container.innerHTML="";
+let total=0;
+for(let key in cart){
+let item=cart[key];
+let subtotal=item.price*item.qty;
+total+=subtotal;
 container.innerHTML+=`
 <div class="cart-item">
-<img src="${p.img}">
-<div>
-<b>${p.nombre}</b><br>
-$${p.precio}
+<img src="${item.img}">
+<div class="cart-info">
+<strong>${item.name}</strong><br>
+Precio: $${item.price}<br>
+Cantidad: ${item.qty}<br>
+Subtotal: $${subtotal.toFixed(2)}<br>
+<button class="btn-danger" onclick="removeItem('${key}')">Eliminar</button>
 </div>
-<button class="delete" onclick="eliminarProducto(${i})">X</button>
-</div>
-`;
-});
+</div>`;
+}
+document.getElementById("cartTotal").innerText="Total: $"+total.toFixed(2);
 }
 
-function eliminarProducto(i){
-carrito.splice(i,1);
-renderCarrito();
+function removeItem(key){ delete cart[key]; saveCart(); renderCart(); }
+function saveCart(){ localStorage.setItem("cart",JSON.stringify(cart)); updateBadge(); }
+function updateBadge(){
+let total=0; for(let i in cart){ total+=cart[i].qty; }
+let badge=document.getElementById("cartBadge");
+badge.innerText=total;
+badge.style.display=total>0?"inline-block":"none";
 }
+updateBadge();
 
-function openModal(id){
-document.getElementById(id).style.display="flex";
-}
+/* DATOS */
+function toggleData(){ document.getElementById("dataSection").classList.toggle("hidden"); }
 
-function closeModal(id){
-document.getElementById(id).style.display="none";
-}
-
-document.getElementById("cartBtn").onclick=()=>{
-if(carrito.length===0){
-mostrarAlerta("No hay productos en el carrito");
-return;
-}
-renderCarrito();
-openModal("cartModal");
-}
-
-function openDatos(){
-closeModal("cartModal");
-openModal("datosModal");
-}
-
-function obtenerUbicacion(){
-
-if(!navigator.geolocation){
-mostrarAlerta("Tu navegador no permite geolocalización");
-return;
-}
-
+function getLocation(){
 navigator.geolocation.getCurrentPosition(
-(pos)=>{
-latitud = pos.coords.latitude;
-longitud = pos.coords.longitude;
-
-ubicacionLink = `https://www.google.com/maps?q=${latitud},${longitud}`;
-
-document.getElementById("ubicacionTexto").innerHTML =
-"Ubicación obtenida correctamente ✔";
+pos=>{
+userLocation=`https://maps.google.com/?q=${pos.coords.latitude},${pos.coords.longitude}`;
+document.getElementById("locationStatus").innerText="Ubicación obtenida correctamente.";
 },
-(err)=>{
-mostrarAlerta("Debes permitir acceso a la ubicación para continuar");
-},
-{enableHighAccuracy:true}
+()=>{ showAlert("No se pudo obtener la ubicación."); }
 );
-
 }
 
-function validarEnvio(){
+/* ENVÍO CON CONFIRMACIÓN */
+function sendOrder(){
+
+if(Object.keys(cart).length===0){ showAlert("El carrito está vacío."); return; }
 
 let nombre=document.getElementById("nombre").value.trim();
 let apellido=document.getElementById("apellido").value.trim();
 
-if(carrito.length===0){
-mostrarAlerta("No hay productos en el carrito");
-return;
+if(!nombre || !apellido){ showAlert("Debes ingresar Nombre y Apellido."); return; }
+if(!userLocation){ showAlert("Debes obtener la ubicación."); return; }
+
+let total=0, detalle="";
+for(let key in cart){
+let item=cart[key];
+let subtotal=item.price*item.qty;
+total+=subtotal;
+detalle+=`${item.name} x${item.qty} - $${subtotal.toFixed(2)}%0A`;
 }
 
-if(!nombre || !apellido){
-mostrarAlerta("Debes completar Nombre y Apellido");
-return;
+let mensaje=`Pedido Owen Burguer%0A%0ACliente: ${nombre} ${apellido}%0A%0A${detalle}%0ATotal: $${total.toFixed(2)}%0A%0AUbicación:%0A${userLocation}`;
+
+document.getElementById("alertMessage").innerHTML=
+"Para evitar pérdida y/o engaños ¡Esperamos tu pago!<br><br>";
+
+document.getElementById("alertButtons").innerHTML=
+`<button onclick="confirmSend('${mensaje}')">Confirmar Envío</button>
+<button class="btn-danger" onclick="closeAlert()">Cancelar</button>`;
+
+document.getElementById("alertModal").style.display="flex";
 }
 
-if(!ubicacionLink){
-mostrarAlerta("Debes obtener tu ubicación");
-return;
-}
-
-mostrarConfirmacion();
-
-}
-
-function mostrarConfirmacion(){
-
-document.getElementById("alertText").innerText =
-"Para evitar pérdida y/o engaños ¡Esperamos tu pago!";
-
-document.getElementById("alertButtons").innerHTML = `
-<br>
-<button onclick="enviarWhatsApp()">Confirmar Envío</button>
-<br><br>
-<button onclick="closeModal('alertModal')">Cancelar</button>
-`;
-
-openModal("alertModal");
-}
-
-function mostrarAlerta(texto){
-
-document.getElementById("alertText").innerText = texto;
-
-document.getElementById("alertButtons").innerHTML = `
-<br>
-<button onclick="closeModal('alertModal')">Aceptar</button>
-`;
-
-openModal("alertModal");
-}
-
-function enviarWhatsApp(){
-
-let nombre=document.getElementById("nombre").value.trim();
-let apellido=document.getElementById("apellido").value.trim();
-
-let mensaje="🛒 *Nuevo Pedido*%0A%0A";
-
-carrito.forEach(p=>{
-mensaje+=`• ${p.nombre} - $${p.precio}%0A`;
-});
-
-mensaje+=`%0A👤 Cliente: ${nombre} ${apellido}%0A`;
-mensaje+=`📍 Ubicación: ${ubicacionLink}`;
-
+function confirmSend(mensaje){
 window.open(`https://wa.me/584247515395?text=${mensaje}`,"_blank");
-
-carrito=[];
-ubicacionLink="";
-latitud="";
-longitud="";
-
-closeModal("datosModal");
-closeModal("alertModal");
-closeModal("cartModal");
-
+cart={};
+saveCart();
+closeCart();
+closeAlert();
 }
-
-renderProductos();
 
 </script>
-
 </body>
 </html>
