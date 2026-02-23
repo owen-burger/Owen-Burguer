@@ -271,7 +271,7 @@ total+=subtotal;
 detalle+=`${item.name} x${item.qty} - $${subtotal.toFixed(2)}%0A`;
 }
 
-let mensaje=`🍔Pedido Owen Burguer%0A%0A👤Cliente: ${nombre} ${apellido}%0A%0A🖋️Pedido: ${detalle}%0A💵Total: $${total.toFixed(2)}%0A%0A📍Ubicación:%0A${userLocation}`;
+let mensaje=`🍔Pedido Owen Burguer%0A%0A👤Cliente: ${nombre} ${apellido}%0A%0A🖋️Pedido: %0A${detalle}%0A💵Total: $${total.toFixed(2)}%0A%0A📍Ubicación:%0A${userLocation}`;
 
 document.getElementById("alertMessage").innerHTML=
 "Para evitar pérdida y/o engaños ¡Esperamos tu pago!<br><br>";
