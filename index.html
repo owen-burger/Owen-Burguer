@@ -34,6 +34,8 @@ button:active{transform:scale(0.92);}
 .badge{position:absolute;top:-5px;right:15px;background:red;color:#fff;font-size:10px;padding:2px 6px;border-radius:50px;display:none;}
 .modal{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);display:none;align-items:center;justify-content:center;z-index:999;}
 .modal-content{background:var(--card);width:90%;max-width:400px;border-radius:20px;padding:20px;text-align:center;}
+.qty-controls{display:flex;justify-content:center;align-items:center;gap:15px;margin:15px 0;}
+.qty-number{font-size:18px;font-weight:700;}
 .cart-item{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;background:var(--card);padding:8px;border-radius:10px;}
 .total{font-weight:700;margin-top:10px;font-size:16px;}
 input{width:90%;padding:10px;margin:8px 0;border-radius:8px;border:1px solid #ccc;font-family:Poppins;}
@@ -47,6 +49,23 @@ iframe{width:100%;height:200px;border-radius:10px;margin-top:10px;border:none;}
 
 <div id="menu" class="products"></div>
 
+<!-- MODAL PRODUCTO -->
+<div class="modal" id="productModal">
+<div class="modal-content">
+<h3 id="modalTitle"></h3>
+<p id="modalDesc"></p>
+<p id="modalPrice"></p>
+<div class="qty-controls">
+<button onclick="changeModalQty(-1)">-</button>
+<span class="qty-number" id="modalQty">1</span>
+<button onclick="changeModalQty(1)">+</button>
+</div>
+<button onclick="addToCart()">Agregar al carrito</button>
+<button onclick="closeProduct()">Cancelar</button>
+</div>
+</div>
+
+<!-- MODAL CARRITO -->
 <div class="modal" id="cartModal">
 <div class="modal-content">
 <h3>🛒 Tu Pedido</h3>
@@ -58,6 +77,7 @@ iframe{width:100%;height:200px;border-radius:10px;margin-top:10px;border:none;}
 </div>
 </div>
 
+<!-- MODAL DATOS -->
 <div class="modal" id="userModal">
 <div class="modal-content">
 <h3>📋 Tus Datos</h3>
@@ -71,6 +91,7 @@ iframe{width:100%;height:200px;border-radius:10px;margin-top:10px;border:none;}
 </div>
 </div>
 
+<!-- ALERTA -->
 <div class="modal" id="alertModal">
 <div class="modal-content">
 <h3>Pedido Generado</h3>
@@ -92,61 +113,87 @@ iframe{width:100%;height:200px;border-radius:10px;margin-top:10px;border:none;}
 <script>
 
 const categories={
-Hamburguesas:[{name:"Clásica",price:5},{name:"Doble Carne",price:7}],
-Perros:[{name:"Tradicional",price:4}],
-Bebidas:[{name:"Coca Cola",price:1.5}]
-};
+Hamburguesas:[
+{name:"Clásica",price:5,desc:"Carne, lechuga, tomate y queso",img:"https://images.unsplash.com/photo-1568901346375-23c9450c58cd"},
+{name:"Doble Carne",price:7,desc:"Doble carne y doble queso",img:"https://images.unsplash.com/photo-1550547660-d9450f859349"}
+],
+Perros:[
+{name:"Tradicional",price:4,desc:"Con papitas y salsa",img:"https://images.unsplash.com/photo-1612392062798-2a5f9f9c38af"}
+],
+Bebidas:[
+{name:"Coca Cola",price:1.5,desc:"Refresco frío",img:"https://images.unsplash.com/photo-1580910051074-3eb694886505"}
+]};
 
 let cart=JSON.parse(localStorage.getItem("cart"))||{};
 let currentCategory="Hamburguesas";
+let selectedProduct=null;
+let modalQty=1;
 let userLocation="";
 
 function saveCart(){localStorage.setItem("cart",JSON.stringify(cart));updateBadge();}
 function updateBadge(){let total=0;for(let i in cart){total+=cart[i].qty;}let badge=document.getElementById("cartBadge");badge.innerText=total;badge.style.display=total>0?"inline-block":"none";}
 
 function showCategory(cat,el){currentCategory=cat;document.querySelectorAll(".nav-item").forEach(i=>i.classList.remove("active"));if(el)el.classList.add("active");renderMenu();}
-function renderMenu(){let menu=document.getElementById("menu");menu.innerHTML="";categories[currentCategory].forEach(prod=>{let card=document.createElement("div");card.className="card";card.innerHTML=`<h4>${prod.name}</h4><div class="price">$${prod.price}</div>`;card.onclick=()=>{if(!cart[prod.name])cart[prod.name]={...prod,qty:0};cart[prod.name].qty++;saveCart();};menu.appendChild(card);});}
+function renderMenu(){
+let menu=document.getElementById("menu");
+menu.innerHTML="";
+categories[currentCategory].forEach(prod=>{
+let card=document.createElement("div");
+card.className="card";
+card.innerHTML=`<img src="${prod.img}"><h4>${prod.name}</h4><div class="price">$${prod.price}</div>`;
+card.onclick=()=>openProduct(prod);
+menu.appendChild(card);
+});
+}
 
-/* ====== CARRITO CORREGIDO ====== */
+function openProduct(prod){
+selectedProduct=prod;
+modalQty=1;
+document.getElementById("modalQty").innerText=modalQty;
+document.getElementById("modalTitle").innerText=prod.name;
+document.getElementById("modalDesc").innerText=prod.desc;
+document.getElementById("modalPrice").innerText="$"+prod.price;
+document.getElementById("productModal").style.display="flex";
+}
+
+function changeModalQty(change){
+modalQty+=change;
+if(modalQty<1)modalQty=1;
+document.getElementById("modalQty").innerText=modalQty;
+}
+
+function closeProduct(){document.getElementById("productModal").style.display="none";}
+
+function addToCart(){
+if(!cart[selectedProduct.name])cart[selectedProduct.name]={...selectedProduct,qty:0};
+cart[selectedProduct.name].qty+=modalQty;
+saveCart();
+closeProduct();
+}
 
 function openCart(){
-let modal=document.getElementById("cartModal");
 let content=document.getElementById("cartContent");
 let totalBox=document.getElementById("cartTotal");
-
 content.innerHTML="";
 let total=0;
 let hasItems=false;
-
 for(let item in cart){
 hasItems=true;
 let div=document.createElement("div");
 div.className="cart-item";
-div.innerHTML=`${item} x${cart[item].qty} <button onclick="removeItem('${item}')">❌</button>`;
+div.innerHTML=`${item} x${cart[item].qty}`;
 content.appendChild(div);
 total+=cart[item].price*cart[item].qty;
 }
-
-if(!hasItems){
-content.innerHTML="<p>No hay productos en el carrito.</p>";
-totalBox.innerHTML="";
-}else{
-totalBox.innerHTML="Total: $"+total;
-}
-
-modal.style.display="flex";
+if(!hasItems){content.innerHTML="<p>No hay productos en el carrito.</p>";totalBox.innerHTML="";}
+else{totalBox.innerHTML="Total: $"+total;}
+document.getElementById("cartModal").style.display="flex";
 }
 
 function closeCart(){document.getElementById("cartModal").style.display="none";}
-function removeItem(name){delete cart[name];saveCart();openCart();}
-
-/* ====== MODALES ====== */
-
 function openUserModal(){document.getElementById("cartModal").style.display="none";document.getElementById("userModal").style.display="flex";}
 function closeUserModal(){document.getElementById("userModal").style.display="none";}
 function closeAlert(){document.getElementById("alertModal").style.display="none";}
-
-/* ====== UBICACIÓN ====== */
 
 function getLocation(){
 navigator.geolocation.getCurrentPosition(pos=>{
@@ -157,8 +204,6 @@ document.getElementById("mapContainer").innerHTML=
 `<iframe src="https://maps.google.com/maps?q=${lat},${lng}&z=15&output=embed"></iframe>`;
 });
 }
-
-/* ====== ENVÍO ====== */
 
 function confirmOrder(){
 let nombre=document.getElementById("nombre").value.trim();
@@ -174,8 +219,6 @@ saveCart();
 closeAlert();
 }
 
-/* ====== ADMIN 5 SEGUNDOS ====== */
-
 let pressTimer;
 const secretAdmin=document.getElementById("secretAdmin");
 secretAdmin.addEventListener("mousedown",()=>pressTimer=setTimeout(()=>window.location.href="admin.html",5000));
@@ -188,4 +231,4 @@ updateBadge();
 
 </script>
 </body>
-</html>
+  </html>
