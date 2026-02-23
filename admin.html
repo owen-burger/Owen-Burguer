@@ -113,7 +113,6 @@ margin:5px;
 
 <button class="add-btn" onclick="openAddModal()">+</button>
 
-<!-- MODAL AGREGAR -->
 <div class="modal" id="addModal">
 <div class="modal-content">
 <h3>Nuevo Producto</h3>
@@ -135,7 +134,9 @@ margin:5px;
 
 <script>
 
-let categories = JSON.parse(localStorage.getItem("categories")) || {
+/* 🔥 AHORA USAMOS LA MISMA CLAVE QUE EL INDEX */
+
+let categories = JSON.parse(localStorage.getItem("adminProducts")) || {
 Hamburguesas:[],
 Perros:[],
 Bebidas:[]
@@ -144,7 +145,7 @@ Bebidas:[]
 let currentCategory="Hamburguesas";
 
 function saveCategories(){
-localStorage.setItem("categories",JSON.stringify(categories));
+localStorage.setItem("adminProducts",JSON.stringify(categories));
 }
 
 function renderAdmin(){
