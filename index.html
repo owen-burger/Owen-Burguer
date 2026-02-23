@@ -17,7 +17,7 @@
 --shadow:0 6px 18px rgba(0,0,0,0.08);
 }
 body{margin:0;font-family:Poppins,sans-serif;background:var(--bg);color:var(--text);}
-header{background:linear-gradient(135deg,#ff7a00,#ffb347);color:#fff;padding:20px;text-align:center;font-size:22px;font-weight:700;}
+header{background:linear-gradient(135deg,#ff7a00,#ffb347);color:#fff;padding:20px;text-align:center;font-size:22px;font-weight:700;position:relative;}
 .products{padding:15px;padding-bottom:110px;display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:15px;}
 .card{background:var(--card);border-radius:15px;box-shadow:var(--shadow);overflow:hidden;cursor:pointer;transition:.3s;}
 .card:hover{transform:scale(1.03);}
@@ -38,27 +38,56 @@ button:active{transform:scale(0.92);}
 .qty-number{font-size:18px;font-weight:700;}
 .cart-item{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;background:var(--card);padding:8px;border-radius:10px;}
 .total{font-weight:700;margin-top:10px;font-size:16px;}
-input{width:90%;padding:10px;margin:8px 0;border-radius:8px;border:1px solid #ccc;font-family:Poppins;}
-iframe{width:100%;height:200px;border-radius:10px;margin-top:10px;border:none;}
 </style>
 </head>
 
 <body>
 
-<header><span id="secretAdmin">🍔</span> Owen Burguer</header>
+<header>
+<span id="secretAdmin">🍔</span>
+Owen Burguer
+</header>
 
 <div id="menu" class="products"></div>
 
-<!-- MODALES (NO MODIFICADOS) -->
+<!-- MODAL PRODUCTO -->
+<div class="modal" id="productModal">
+  <div class="modal-content">
+    <h3 id="modalTitle"></h3>
+    <p id="modalDesc"></p>
+    <div class="qty-controls">
+      <button onclick="changeQty(-1)">-</button>
+      <span class="qty-number" id="qtyNumber">1</span>
+      <button onclick="changeQty(1)">+</button>
+    </div>
+    <button onclick="addToCart()">Agregar</button>
+    <button class="btn-danger" onclick="closeModal()">Cancelar</button>
+  </div>
+</div>
 
-<!-- ... TODOS TUS MODALES EXACTAMENTE IGUAL ... -->
+<!-- MODAL CARRITO -->
+<div class="modal" id="cartModal">
+  <div class="modal-content">
+    <h3>Tu Pedido</h3>
+    <div id="cartItems"></div>
+    <div class="total" id="cartTotal"></div>
+    <button onclick="closeCart()">Cerrar</button>
+  </div>
+</div>
+
+<!-- NAVBAR -->
+<div class="bottom-nav">
+  <div class="nav-item active" onclick="showCategory('Hamburguesas',this)">🍔<br>Hamburguesas</div>
+  <div class="nav-item" onclick="showCategory('Perros',this)">🌭<br>Perros</div>
+  <div class="nav-item" onclick="showCategory('Bebidas',this)">🥤<br>Bebidas</div>
+  <div class="nav-item" onclick="openCart()">🛒<br>Carrito
+    <span id="cartBadge" class="badge"></span>
+  </div>
+</div>
 
 <script>
 
-/* ===========================
-   PRODUCTOS BASE
-=========================== */
-
+/* PRODUCTOS BASE */
 const categories={
 Hamburguesas:[
 {name:"Clásica",price:5,desc:"Carne, lechuga, tomate y queso",img:"https://images.unsplash.com/photo-1568901346375-23c9450c58cd"},
@@ -71,68 +100,31 @@ Bebidas:[
 {name:"Coca Cola",price:1.5,desc:"Refresco frío",img:"https://images.unsplash.com/photo-1580910051074-3eb694886505"}
 ]};
 
-/* ===========================
-   CARGA SEGURA DESDE ADMIN
-=========================== */
-
+/* CARGA SEGURA ADMIN */
 function loadAdminProducts(){
 let stored = localStorage.getItem("adminProducts");
 if(!stored) return;
-
 try{
 let parsed = JSON.parse(stored);
-
-if(typeof parsed !== "object") return;
-
 for(let cat in parsed){
-
-if(!Array.isArray(parsed[cat])) continue;
-
-if(!categories[cat]){
-categories[cat]=[];
-}
-
+if(!categories[cat]) categories[cat]=[];
 parsed[cat].forEach(prod=>{
 if(prod.name && prod.price){
 categories[cat].push(prod);
 }
 });
-
 }
-
-}catch(e){
-console.log("Error cargando adminProducts:", e);
+}catch(e){console.log(e);}
 }
-}
-
 loadAdminProducts();
 
-/* ===========================
-   RESTO DE TU CÓDIGO ORIGINAL
-=========================== */
-
+/* VARIABLES */
 let cart=JSON.parse(localStorage.getItem("cart"))||{};
 let currentCategory="Hamburguesas";
 let selectedProduct=null;
 let modalQty=1;
-let userLocation="";
 
-function saveCart(){localStorage.setItem("cart",JSON.stringify(cart));updateBadge();}
-function updateBadge(){
-let total=0;
-for(let i in cart){ total+=cart[i].qty; }
-let badge=document.getElementById("cartBadge");
-badge.innerText=total;
-badge.style.display=total>0?"inline-block":"none";
-}
-
-function showCategory(cat,el){
-currentCategory=cat;
-document.querySelectorAll(".nav-item").forEach(i=>i.classList.remove("active"));
-if(el)el.classList.add("active");
-renderMenu();
-}
-
+/* RENDER */
 function renderMenu(){
 let menu=document.getElementById("menu");
 menu.innerHTML="";
@@ -144,12 +136,88 @@ card.onclick=()=>openProduct(prod);
 menu.appendChild(card);
 });
 }
-
 renderMenu();
+
+/* CATEGORIAS */
+function showCategory(cat,el){
+currentCategory=cat;
+document.querySelectorAll(".nav-item").forEach(i=>i.classList.remove("active"));
+if(el)el.classList.add("active");
+renderMenu();
+}
+
+/* MODAL PRODUCTO */
+function openProduct(prod){
+selectedProduct=prod;
+modalQty=1;
+document.getElementById("qtyNumber").innerText=1;
+document.getElementById("modalTitle").innerText=prod.name;
+document.getElementById("modalDesc").innerText=prod.desc;
+document.getElementById("productModal").style.display="flex";
+}
+
+function closeModal(){
+document.getElementById("productModal").style.display="none";
+}
+
+function changeQty(val){
+modalQty+=val;
+if(modalQty<1) modalQty=1;
+document.getElementById("qtyNumber").innerText=modalQty;
+}
+
+function addToCart(){
+let key=selectedProduct.name;
+if(cart[key]){
+cart[key].qty+=modalQty;
+}else{
+cart[key]={...selectedProduct,qty:modalQty};
+}
+saveCart();
+closeModal();
+}
+
+/* CARRITO */
+function openCart(){
+renderCart();
+document.getElementById("cartModal").style.display="flex";
+}
+
+function closeCart(){
+document.getElementById("cartModal").style.display="none";
+}
+
+function renderCart(){
+let container=document.getElementById("cartItems");
+container.innerHTML="";
+let total=0;
+for(let key in cart){
+let item=cart[key];
+total+=item.price*item.qty;
+container.innerHTML+=`
+<div class="cart-item">
+<span>${item.name} x${item.qty}</span>
+<span>$${(item.price*item.qty).toFixed(2)}</span>
+</div>`;
+}
+document.getElementById("cartTotal").innerText="Total: $"+total.toFixed(2);
+}
+
+function saveCart(){
+localStorage.setItem("cart",JSON.stringify(cart));
+updateBadge();
+}
+
+function updateBadge(){
+let total=0;
+for(let i in cart){ total+=cart[i].qty; }
+let badge=document.getElementById("cartBadge");
+badge.innerText=total;
+badge.style.display=total>0?"inline-block":"none";
+}
 updateBadge();
 
-/* ADMIN SECRETO 5 SEGUNDOS */
-
+/* ADMIN SECRETO */
 let pressTimer;
 const secretAdmin=document.getElementById("secretAdmin");
 secretAdmin.addEventListener("mousedown",()=>pressTimer=setTimeout(()=>window.location.href="admin.html",5000));
@@ -158,5 +226,6 @@ secretAdmin.addEventListener("touchstart",()=>pressTimer=setTimeout(()=>window.l
 secretAdmin.addEventListener("touchend",()=>clearTimeout(pressTimer));
 
 </script>
+
 </body>
 </html>
