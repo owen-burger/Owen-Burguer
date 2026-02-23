@@ -120,7 +120,8 @@ document.getElementById("alertModal").style.display="none";
 }
 
 /* PRODUCTOS */
-const categories={
+/* PRODUCTOS BASE */
+const baseCategories = {
 Hamburguesas:[
 {name:"Clásica",price:5,desc:"Carne, lechuga, tomate y queso",img:"https://images.unsplash.com/photo-1568901346375-23c9450c58cd"},
 {name:"Doble Carne",price:7,desc:"Doble carne y doble queso",img:"https://images.unsplash.com/photo-1550547660-d9450f859349"}
@@ -131,6 +132,25 @@ Perros:[
 Bebidas:[
 {name:"Coca Cola",price:1.5,desc:"Refresco frío",img:"https://images.unsplash.com/photo-1580910051074-3eb694886505"}
 ]};
+
+/* CARGAR PRODUCTOS ADMIN */
+let adminProducts = JSON.parse(localStorage.getItem("adminProducts")) || {};
+
+/* MEZCLAR PRODUCTOS BASE + ADMIN */
+let categories = {};
+
+function mergeProducts(){
+categories = JSON.parse(JSON.stringify(baseCategories));
+
+for(let cat in adminProducts){
+if(!categories[cat]){
+categories[cat] = [];
+}
+categories[cat] = categories[cat].concat(adminProducts[cat]);
+}
+}
+
+mergeProducts();
 
 let cart=JSON.parse(localStorage.getItem("cart"))||{};
 let currentCategory="Hamburguesas";
